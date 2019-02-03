@@ -9,6 +9,9 @@ tune_lambda, test_error and mapping_data.
 import numpy as np
 import pandas as pd
 
+
+import numpy.linalg as lg
+
 ###### Q1.1 ######
 def mean_square_error(w, X, y):
     """
@@ -24,23 +27,29 @@ def mean_square_error(w, X, y):
     # TODO 1: Fill in your code here #
     #####################################################
     err = None
+    predict = X.dot(w)
+    err = ((predict - y)**2).mean()
     return err
 
 ###### Q1.2 ######
 def linear_regression_noreg(X, y):
-  """
-  Compute the weight parameter given X and y.
-  Inputs:
-  - X: A numpy array of shape (num_samples, D) containing feature.
-  - y: A numpy array of shape (num_samples, ) containing label
-  Returns:
-  - w: a numpy array of shape (D, )
-  """
-  #####################################################
-  #	TODO 2: Fill in your code here #
-  #####################################################		
-  w = None
-  return w
+    """
+    Compute the weight parameter given X and y.
+    Inputs:
+    - X: A numpy array of shape (num_samples, D) containing feature.
+    - y: A numpy array of shape (num_samples, ) containing label
+    Returns:
+    - w: a numpy array of shape (D, )
+    """
+    #####################################################
+    #	TODO 2: Fill in your code here #
+    #####################################################
+    w = None
+
+    assert isinstance(X, np.ndarray) and isinstance(y, np.ndarray)
+
+    w = lg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    return w
 
 ###### Q1.3 ######
 def linear_regression_invertible(X, y):
@@ -56,6 +65,15 @@ def linear_regression_invertible(X, y):
     # TODO 3: Fill in your code here #
     #####################################################
     w = None
+
+    matrix = X.T.dot(X)
+    I = 0.1*np.identity(matrix.shape[0])
+    eigenvalues, eigenvectors = lg.eig(matrix)
+    while np.abs(eigenvalues).min() < 0.00001:
+        matrix += I
+        eigenvalues, eigenvectors = lg.eig(matrix)
+
+    w = lg.inv(matrix).dot(X.T).dot(y)
     return w
 
 
@@ -74,6 +92,10 @@ def regularized_linear_regression(X, y, lambd):
   # TODO 4: Fill in your code here #
   #####################################################		
     w = None
+    matrix = X.T.dot(X)
+    I = lambd * np.identity(matrix.shape[0])
+    matrix += I
+    w = lg.inv(matrix).dot(X.T).dot(y)
     return w
 
 ###### Q1.5 ######
@@ -92,6 +114,17 @@ def tune_lambda(Xtrain, ytrain, Xval, yval):
     # TODO 5: Fill in your code here #
     #####################################################		
     bestlambda = None
+    best_mse = 999999.9
+    #lambd = 10**-19
+    for i in range(-19, 20):
+        lambd = 10**i
+        w = regularized_linear_regression(Xtrain, ytrain, lambd)
+        mse = mean_square_error(w, Xval, yval)
+        if mse < best_mse:
+            bestlambda = lambd
+            best_mse = mse
+        #lambd *= 10
+
     return bestlambda
     
 
@@ -107,8 +140,10 @@ def mapping_data(X, power):
     """
     #####################################################
     # TODO 6: Fill in your code here #
-    #####################################################		
-    
-    return X
+    #####################################################
+    powerX = [X]
+    for i in range(1, power):
+        powerX.append(powerX[i-1]*X)
+    return np.concatenate(powerX, axis=1)
 
 
