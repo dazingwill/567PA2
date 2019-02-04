@@ -21,7 +21,6 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
     N, D = X.shape
     assert len(np.unique(y)) == 2
 
-
     w = np.zeros(D)
     if w0 is not None:
         w = w0
@@ -30,6 +29,9 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
     if b0 is not None:
         b = b0
 
+    step_size /= N
+    newy = np.where(y == 0, -1, y)
+
     if loss == "perceptron":
         ############################################
         # TODO 1 : Edit this if part               #
@@ -37,7 +39,16 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
         w = np.zeros(D)
         b = 0
         ############################################
-        
+
+        newy = np.where(y == 0, -1, y)
+
+        for i in range(max_iterations):
+            loss = newy * (X.dot(w) + b)
+            loss = np.int32(loss <= 0)
+            loss = loss * newy
+            update = loss.T.dot(X)
+            w = w + step_size*update
+            b = b + step_size*np.sum(loss)
 
     elif loss == "logistic":
         ############################################
@@ -46,7 +57,15 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
         w = np.zeros(D)
         b = 0
         ############################################
-        
+
+        newy = np.where(y == 0, -1, y)
+
+        for i in range(max_iterations):
+            loss = -newy * (X.dot(w) + b)
+            loss = sigmoid(loss) * newy
+            update = loss.T.dot(X)
+            w = w + step_size*update
+            b = b + step_size*np.sum(loss)
 
     else:
         raise "Loss Function is undefined."
@@ -69,7 +88,9 @@ def sigmoid(z):
     #          Compute value                   #
     value = z
     ############################################
-    
+
+    value = 1/(1+np.exp(-z))
+
     return value
 
 def binary_predict(X, w, b, loss="perceptron"):
@@ -93,7 +114,7 @@ def binary_predict(X, w, b, loss="perceptron"):
         #          Compute preds                   #
         preds = np.zeros(N)
         ############################################
-        
+        preds = np.int32((X.dot(w) + b) > 0)
 
     elif loss == "logistic":
         ############################################
@@ -101,7 +122,7 @@ def binary_predict(X, w, b, loss="perceptron"):
         #          Compute preds                   #
         preds = np.zeros(N)
         ############################################
-        
+        preds = np.int32((X.dot(w) + b) > 0)
 
     else:
         raise "Loss Function is undefined."
