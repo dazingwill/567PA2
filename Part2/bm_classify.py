@@ -30,7 +30,7 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
         b = b0
 
     step_size /= N
-    newy = np.where(y == 0, -1, y)
+    newy = np.where(y == 0, -1, 1)
 
     if loss == "perceptron":
         ############################################
@@ -40,15 +40,13 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
         b = 0
         ############################################
 
-        newy = np.where(y == 0, -1, y)
-
         for i in range(max_iterations):
             loss = newy * (X.dot(w) + b)
             loss = np.int32(loss <= 0)
             loss = loss * newy
             update = loss.T.dot(X)
-            w = w + step_size*update
-            b = b + step_size*np.sum(loss)
+            w += step_size*update
+            b += step_size*np.sum(loss)
 
     elif loss == "logistic":
         ############################################
@@ -58,14 +56,12 @@ def binary_train(X, y, loss="perceptron", w0=None, b0=None, step_size=0.5, max_i
         b = 0
         ############################################
 
-        newy = np.where(y == 0, -1, y)
-
         for i in range(max_iterations):
             loss = -newy * (X.dot(w) + b)
             loss = sigmoid(loss) * newy
             update = loss.T.dot(X)
-            w = w + step_size*update
-            b = b + step_size*np.sum(loss)
+            w += step_size*update
+            b += step_size*np.sum(loss)
 
     else:
         raise "Loss Function is undefined."
@@ -112,21 +108,20 @@ def binary_predict(X, w, b, loss="perceptron"):
         ############################################
         # TODO 4 : Edit this if part               #
         #          Compute preds                   #
-        preds = np.zeros(N)
-        ############################################
+        #preds = np.zeros(N)
         preds = np.int32((X.dot(w) + b) > 0)
+        ############################################
 
     elif loss == "logistic":
         ############################################
         # TODO 5 : Edit this if part               #
         #          Compute preds                   #
-        preds = np.zeros(N)
-        ############################################
+        #preds = np.zeros(N)
         preds = np.int32((X.dot(w) + b) > 0)
+        ############################################
 
     else:
         raise "Loss Function is undefined."
-    
 
     assert preds.shape == (N,) 
     return preds
@@ -167,6 +162,7 @@ def multiclass_train(X, y, C,
     if b0 is not None:
         b = b0
 
+
     np.random.seed(42)
     if gd_type == "sgd":
         ############################################
@@ -175,6 +171,23 @@ def multiclass_train(X, y, C,
         w = np.zeros((C, D))
         b = np.zeros(C)
         ############################################
+
+        for it in range(max_iterations):
+            pickn = np.random.choice(N)
+            xn = X[pickn]
+            yn = y[pickn]
+
+            loss = xn.dot(w.T) + b  # 1*C
+            loss -= loss.max()
+
+            yp = np.exp(loss)
+            yp /= yp.sum()
+
+            err = yp
+            err[yn] -= 1
+            update = np.dot(err.reshape(C, 1), xn.reshape(1, D))
+            w -= step_size * update
+            b -= step_size * err
         
 
     elif gd_type == "gd":
@@ -184,11 +197,24 @@ def multiclass_train(X, y, C,
         w = np.zeros((C, D))
         b = np.zeros(C)
         ############################################
-        
+
+        for it in range(max_iterations):
+            loss = X.dot(w.T) + b  # N*C
+
+            yp = np.exp(loss)
+            yp /= yp.sum(axis=1, keepdims=True)
+
+            # one-hot matrix
+            onehot = np.zeros([N, C])
+            onehot[np.arange(N), y.astype(int)] = 1.0
+
+            err = yp - onehot
+            update = np.dot(err.T, X)
+            w -= step_size/N * update
+            b -= step_size/N * err.sum(axis=0)
 
     else:
         raise "Type of Gradient Descent is undefined."
-    
 
     assert w.shape == (C, D)
     assert b.shape == (C,)
@@ -213,8 +239,11 @@ def multiclass_predict(X, w, b):
     ############################################
     # TODO 8 : Edit this part to               #
     #          Compute preds                   #
-    preds = np.zeros(N)
+    #preds = np.zeros(N)
     ############################################
+
+    preds = X.dot(w.T) + b  # N*C
+    preds = np.argmax(preds, axis=1)
 
     assert preds.shape == (N,)
     return preds
