@@ -1,10 +1,10 @@
-# 567PA1: KNN&Decision Tree
+# 567PA2: Linear Regression&Classification
 
-This is the 1st assignment for [USC CSCI 567: Machine Learning](www-bcf.usc.edu/~adamchik/567/) in 2019 Spring.
+This is the 2nd assignment for [USC CSCI 567: Machine Learning](www-bcf.usc.edu/~adamchik/567/) in 2019 Spring.
 
-> In this programming assignment you will to implement **k-Nearest Neighbours and Decision Tree**. We provide the bootstrap code and you are expected to complete the classes and functions.
+> For this Assignment you are asked to implement linear regression. You are asked to implement 6 python functions for linear regression in linear_regression.py. 
+>
+> For this assignment you are asked to implement both binary and multiclass classification using gradient descent to update weight and bias in each iteration. 
 
-
-
-See *PA1 instruction.ipynb* for detailed description.
+See *PA2.ipynb* for detailed description.
 
